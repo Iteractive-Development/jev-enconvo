@@ -1,0 +1,17 @@
+{
+  "origin": "original",
+  "note": "Not a repo conversion: the content is hand-maintained in place. No upstream clone, no builder regeneration - edit marketplace/plugins/jev-enconvo/ directly (skills/jev-enconvo/SKILL.md, src/). Install and update are a build: cd into the plugin folder, npm install --include=dev when dependencies changed (npm omits dev by default on this Mac), then npm run build. The folder marketplace registration is provenance only.",
+  "adapter_dir": "/Users/bradhallett/Projects/Agent Plugins/jev-enconvo",
+  "workspace": "/Users/bradhallett/Projects/Agent Plugins",
+  "prefix": "jev",
+  "marketplace_name": "jev-enconvo",
+  "category": "development",
+  "marketplace_description": "Jev (TypeSafe System One) for Enconvo: the jev-enconvo skill for running judge/classify judgment steps in-chat and powering browser-use and computer-use automation. By Iteractive Development.",
+  "owner": {
+    "name": "Iteractive Development",
+    "url": "https://iteractive.dev"
+  },
+  "related": {
+    "upstream_craft_skill": "typesafe-ai (installed extension 'typesafe') - question wording, state design, criteria, yellow flags"
+  }
+}

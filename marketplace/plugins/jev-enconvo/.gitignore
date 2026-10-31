@@ -1,0 +1,4 @@
+node_modules/
+skills/schemas.json
+.DS_Store
+*.tsbuildinfo
