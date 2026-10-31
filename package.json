@@ -63,9 +63,7 @@
     "validate": "enconvo plugin validate"
   },
   "dependencies": {
-    "@enconvo/api": "^0.1.174"
-  },
-  "devDependencies": {
+    "@enconvo/api": "^0.1.174",
     "@types/node": "^26.6.6",
     "tsup": "^9.0.0",
     "typescript": "^7.0.2"
