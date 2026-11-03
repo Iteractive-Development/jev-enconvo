@@ -1,6 +1,14 @@
 import { EnconvoResponse, type RequestOptions } from "@enconvo/api";
 import { runWorkflow, outputString } from "./lib/jev";
 
+// Tool routes verified live against this install's Local API (2026-11-02):
+//   POST /api/apple_mail/list_messages      -> 200 (installed apple_mail plugin command)
+//   POST /api/apple_messages/get_unread_messages -> 200 (installed apple_messages plugin command)
+// Both are first-party Enconvo plugins whose commands answer at /api/<plugin>/<command>.
+// Workflow DSL fields used below are documented in the installed workflow skill
+// (agent-workflow/v1): `uses: transform` + `value:` (Transform executor, pure
+// template evaluation) and `required: false` (reliability knob: a step failure
+// doesn't abort the run). Verified against workflow skill v1.0.133.
 const SOURCE = `version: agent-workflow/v1
 title: Triage Inbox
 description: Sort recent Mail inbox messages and unread iMessages into triage lanes.

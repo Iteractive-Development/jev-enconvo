@@ -59,7 +59,7 @@ jobs:
           import json
           results = json.loads(r'''{{ steps.probe.output | dump }}''')
           probes = json.loads(r'''{{ inputs.probes | dump }}''')
-          tol = {{ inputs.tolerance }}
+          tol = json.loads(r'''{{ inputs.tolerance | dump }}''')
           flags = []
           for i, (r, p) in enumerate(zip(results, probes), 1):
               top = r["label"]

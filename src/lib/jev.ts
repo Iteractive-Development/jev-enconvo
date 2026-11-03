@@ -14,7 +14,7 @@ export async function runWorkflow(
   const start = await NativeAPI.localApi("workflow/run", {
     source,
     inputs,
-    runtimeSource: "plugin_command",
+    runtimeSource: "api",
     waitMs: 25000
   });
   if (!start.ok) {
