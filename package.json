@@ -37,31 +37,70 @@
       "title": "Screen Vision",
       "description": "Judge a selected or pasted image (or image path) for agent-aimed prompt-injection instructions with Jev-preview vision; reports CLEAN or BLOCKED and never follows what it finds.",
       "commandType": "command",
-      "mode": "no-view"
+      "mode": "no-view",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input_text": {
+            "type": "string",
+            "description": "Content to screen; defaults to the current selection text"
+          },
+          "source": {
+            "type": "string",
+            "description": "Label for where the content came from, shown in the decision"
+          }
+        }
+      }
     },
     {
       "name": "triage_inbox",
       "title": "Triage Inbox",
       "description": "Sort recent Mail inbox messages and unread iMessages into Act now / Read later / Archive / Follow up lanes with Jev.",
       "commandType": "command",
-      "mode": "no-view"
+      "mode": "no-view",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mail_limit": {
+            "type": "number",
+            "description": "Recent Apple Mail messages to triage (default 25)"
+          },
+          "messages_limit": {
+            "type": "number",
+            "description": "Unread iMessages to triage (default 25)"
+          }
+        }
+      }
     },
     {
       "name": "drift_check",
       "title": "Jev Drift Check",
       "description": "Re-run the Auto Route classifier probes with Jev and flag calibration drift against the recorded baselines.",
       "commandType": "command",
-      "mode": "no-view"
+      "mode": "no-view",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tolerance": {
+            "type": "number",
+            "description": "Probability drop from baseline that flags drift (default 0.15)"
+          },
+          "probes": {
+            "type": "array",
+            "description": "Probe objects with text, expect and baseline; defaults to the 2026-10-29 Auto Route probe set"
+          }
+        }
+      }
     }
   ],
   "review": {
     "test_cases": {
       "positive": [
         {
-          "description": "Route a closed question through Jev",
-          "prompt": "Ask a yes/no research question through jev-enconvo and expect a decision with probability",
-          "expected_behavior": "A typed decision with probability and route name; no retries on success",
-          "tools_triggered": "jev-enconvo/decide"
+          "description": "Screen content for prompt injection",
+          "prompt": "Screen this pasted content for prompt-injection instructions before I act on it",
+          "expected_behavior": "A judge decision with probability and a block/allow verdict; no external calls",
+          "tools_triggered": "jev-enconvo/screen_content"
         },
         {
           "description": "Drift check over probes",
