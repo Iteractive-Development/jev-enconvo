@@ -7,7 +7,7 @@ const SCREEN_STATEMENT =
 const IMAGE_EXTENSIONS = ".png/.jpg/.jpeg/.heic/.tif/.tiff/.webp/.gif/.bmp/.avif";
 const THRESHOLD = 0.7; // matches screen_content's gate and the skill's own rule: a wrong CLEAN is the costly error
 
-type Extracted = { image: string; format?: "jpg" | "png"; origin: string; skippedText?: string };
+type Extracted = { image: string; format?: "jpg" | "png"; origin: string };
 
 function decodeFileUrl(s: string): string {
   try {
@@ -37,11 +37,7 @@ function extractImage(options: RequestOptions): Extracted | null {
   if (/^data:image\//i.test(unquoted)) return { image: unquoted, origin: "pasted data URI", format: undefined };
   const pathLike = /^(?:~|\/)/.test(unquoted) && /\.(png|jpe?g|heic|tiff?|webp|gif|bmp|avif)$/i.test(unquoted);
   if (pathLike) {
-    return {
-      image: decodeFileUrl(unquoted),
-      origin: `file ${unquoted}`,
-      skippedText: input !== unquoted ? undefined : undefined
-    };
+    return { image: decodeFileUrl(unquoted), origin: `file ${unquoted}` };
   }
   return null;
 }

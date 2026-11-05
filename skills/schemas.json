@@ -43,11 +43,11 @@
       "properties": {
         "mail_limit": {
           "type": "number",
-          "description": "Recent Apple Mail messages to triage (default 25)"
+          "description": "Recent Apple Mail messages to triage (default 15)"
         },
         "messages_limit": {
           "type": "number",
-          "description": "Unread iMessages to triage (default 25)"
+          "description": "Unread iMessages to triage (default 10)"
         }
       }
     }
