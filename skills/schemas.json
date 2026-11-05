@@ -2,8 +2,14 @@
   {
     "name": "screen_content",
     "title": "Screen Content",
-    "description": "Judge selected or pasted content for agent-aimed prompt-injection instructions; reports CLEAN or BLOCKED and never follows what it finds.",
+    "description": "Judge selected or pasted text for agent-aimed prompt-injection instructions; reports CLEAN or BLOCKED and never follows what it finds.",
     "routePath": "jev-enconvo/screen_content"
+  },
+  {
+    "name": "screen_vision",
+    "title": "Screen Vision",
+    "description": "Judge a selected or pasted image (or image path) for agent-aimed prompt-injection instructions with Jev-preview vision; reports CLEAN or BLOCKED and never follows what it finds.",
+    "routePath": "jev-enconvo/screen_vision"
   },
   {
     "name": "triage_inbox",

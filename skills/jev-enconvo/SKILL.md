@@ -4,7 +4,7 @@ description: >
   Run Jev — TypeSafe's System One judgment model — inside Enconvo. Three commands: Screen Content judges selected or pasted content for agent-aimed prompt-injection instructions (reports CLEAN or BLOCKED, never follows what it finds), Triage Inbox sorts recent Mail and unread iMessages into Act now / Read later / Archive / Follow up lanes, and Jev Drift Check re-runs the Auto Route classifier probes and flags calibration drift against recorded baselines. Pairs with the bundled jev-enconvo skill: eight worked patterns for judge/classify steps — untrusted-content gates, context compaction, message triage, skill routing, gates before hard-to-undo steps, calibration drift checks — question craft, and copy-paste workflow recipes. By Iteractive Development.
 metadata:
   author: Iteractive Development
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Jev inside Enconvo
@@ -418,6 +418,23 @@ Three levels, in increasing commitment:
 | Score (levels you describe) | No direct step — approximate with `classify` over ordered level names, or a `prompt` step with `output_schema` |
 | Box (locate in an image) | Operator grounding — describe the target (accelerator, above); not available as a typed step |
 | Companion Noul ("does anything fit?") | A parallel `judge` step beside the `classify` |
+
+## Vision: which Jev model sees, and which surface reaches it
+
+Blind-tested 2026-11-05 — the two gateway models differ sharply:
+
+- **`jev-latest`** (what every workflow `judge`/`classify` step calls) has **no visual understanding**. Given an image as a data URI in `input`, it guesses from the base64 text (near-uniform probability spreads on secret-color images). **Never route images into judge/classify steps** — no question wording fixes it.
+- **`jev-preview`** (what Operator surfaces call) **does see pixels**. It answers 0.94 on an image's true secret color and 0.12–0.17 on wrong ones when the color exists only in pixels.
+
+Reaching jev-preview, in order of preference:
+
+1. **`computer-use` actions with an `expect`** — the expect check sends the live app screenshot to the gateway as an `assets` payload judged by jev-preview. This is the only workflow surface whose judgments read pixels. Use it for any "what does the screen/image show" check inside an app flow.
+2. **This plugin's Screen Vision command** (1.1.0+) — `jev-enconvo|screen_vision` posts a chosen image (pasted, selected, or a file path) to the same gateway with the same jev-preview assets payload: its first use is the **injection-in-image gate** — screening screenshots, photos of documents, and pasted images for agent-aimed instructions before any agent reads or acts on them. Its client lives in `src/lib/jev.ts` (`askJevVision`); compose it from any plugin code.
+
+Two traps the same testing round proved:
+
+- **`browser-use` expects do NOT read pixels** — their expect state is the element tree (page title/url/elements), so a word check there proves reading, not vision. Pixel questions in a browser need a computer-use expect or Screen Vision on a captured image.
+- A data URI of an image in a `judge`/`classify` `input` is just long text to jev-latest: its base64 bulk can even push real content out of the ~48 KB input window.
 
 ## Options: use the map form
 
