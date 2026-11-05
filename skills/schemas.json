@@ -21,7 +21,7 @@
   {
     "name": "screen_vision",
     "title": "Screen Vision",
-    "description": "Judge a selected or pasted image (or image path) for agent-aimed prompt-injection instructions with Jev-preview vision; reports CLEAN or BLOCKED and never follows what it finds.",
+    "description": "Judge a selected, attached or path-named image for agent-aimed prompt-injection instructions with Jev-preview vision; reports BLOCKED/UNSURE/CLEAN and never follows what it finds. The image is uploaded (downscaled to ≤1568 px JPEG) to Enconvo Cloud's Jev gateway; each call costs points.",
     "routePath": "jev-enconvo/screen_vision",
     "parameters": {
       "type": "object",
@@ -69,6 +69,17 @@
           "description": "Probe objects with text, expect and baseline; defaults to the 2026-10-29 Auto Route probe set"
         }
       }
+    }
+  },
+  {
+    "name": "vision_judge",
+    "title": "vision_judge",
+    "description": "Local API route: POST jev-enconvo/vision_judge Body: { image: string (data URI, base64 or file path), statement: string, context_label?: string, threshold?: number (default 0.7) } Returns: { yes, probability, band, model } This exposes askJevVision to other plugins, workflows and agents — the composable vision judgment surface the SKILL references.",
+    "routePath": "jev-enconvo/vision_judge",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
     }
   }
 ]

@@ -1,10 +1,10 @@
 ---
 name: jev-enconvo
 description: >
-  Run Jev — TypeSafe's System One judgment model — inside Enconvo. Three commands: Screen Content judges selected or pasted content for agent-aimed prompt-injection instructions (reports CLEAN or BLOCKED, never follows what it finds), Triage Inbox sorts recent Mail and unread iMessages into Act now / Read later / Archive / Follow up lanes, and Jev Drift Check re-runs the Auto Route classifier probes and flags calibration drift against recorded baselines. Pairs with the bundled jev-enconvo skill: eight worked patterns for judge/classify steps — untrusted-content gates, context compaction, message triage, skill routing, gates before hard-to-undo steps, calibration drift checks — question craft, and copy-paste workflow recipes. By Iteractive Development.
+  Run Jev — TypeSafe's System One judgment model — inside Enconvo. Four commands: Screen Content judges selected or pasted text for agent-aimed prompt-injection instructions, Screen Vision judges a selected, attached or path-named image the same way with Jev-preview vision (images are uploaded downsized to Enconvo Cloud's Jev gateway and cost points), Triage Inbox sorts recent Mail and unread iMessages into Act now / Read later / Archive / Follow up lanes, and Jev Drift Check re-runs the Auto Route classifier probes and flags calibration drift against recorded baselines. Pairs with the bundled jev-enconvo skill: eight worked patterns for judge/classify steps, the Vision section on which Jev model sees pixels and through which surface, question craft, and copy-paste workflow recipes. By Iteractive Development.
 metadata:
   author: Iteractive Development
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Jev inside Enconvo
@@ -313,7 +313,10 @@ jobs:
 ### Risky-action gate (`action-gate.yaml`)
 
 Embed as a subworkflow before the send/delete/publish/pay step and branch on
-`proceed`:
+`proceed`. The approval step runs UNCONDITIONALLY: judgments narrow when to
+ask (and what to tell the user), never whether to ask — a wrong low-risk score
+must never skip the human (fixed 2026-11-05 after the T-6 review found the old
+conditional `if:` could bypass it):
 
 ```yaml
 jobs:
@@ -328,15 +331,18 @@ jobs:
         question: "Does this action clearly match what the user asked for, with no obvious scope creep?"
         input: "Asked: {{ inputs.intent }}. Action: {{ inputs.action }}"
       - id: ask
-        if: "{{ steps.risk.output.yes or not steps.intent.output.yes }}"
         uses: approval
         timeoutMs: 3600000      # literal number — validated before templates render
-        message: "About to: {{ inputs.action }}. Jev — hard to undo: {{ steps.risk.output.yes }} (p={{ steps.risk.output.probability }}); intent match: {{ steps.intent.output.yes }}. Approve?"
+        message: "About to: {{ inputs.action }}. Jev — hard to undo: {{ steps.risk.output.yes }} (p={{ steps.risk.output.probability }}); intent match: {{ steps.intent.output.yes }} (p={{ steps.intent.output.probability }}). Approve?"
       - id: decision
+        needs: [risk, intent, ask]
         run_when: always
         uses: transform
-        value: "{{ {'proceed': ((not steps.risk.output.yes and steps.intent.output.yes) or (steps.ask.output.approved or false)), 'hard_to_undo': steps.risk.output.yes, 'intent_match': steps.intent.output.yes} }}"
+        value: "{{ {'proceed': (steps.ask.output.approved or false), 'hard_to_undo': steps.risk.output.yes, 'intent_match': steps.intent.output.yes} }}"
 ```
+
+`proceed` requires an explicit approval, every time. The judgments only shape
+the message (and let an unattended run surface why it stopped).
 
 ### Context compaction (`compact-context.yaml`)
 
@@ -399,15 +405,7 @@ Three levels, in increasing commitment:
    engine picks files up passively, no registration). It becomes runnable from
    the SmartBar by title, schedulable with cron, and its inputs make it
    parameterizable per run.
-3. **Native commands and API routes** — shipped in this plugin since 1.1.0
-   (Enconvo plugin format: `package.json` with a `commands` list, TypeScript
-   under `src/`): **Screen Content** (untrusted-content gate), **Triage
-   Inbox** (message triage lanes) and **Jev Drift Check** (calibration) run
-   from SmartBar or PopBar, each posting inline YAML with judgment steps to
-   the local `workflow/run` route. The same format carries Local API routes
-   under `src/api/` when a pattern needs to be callable from scripts.
-   Claude-format packages keep loading this plugin's skills, MCP servers and
-   settings; the commands are the Enconvo-format layer on top.
+3. **Native commands and API routes** — shipped in this plugin (Enconvo plugin format: `package.json` with a `commands` list, TypeScript under `src/`): **Screen Content** (untrusted-text gate, judge step via `workflow/run`), **Screen Vision** (injection-in-image gate, calls the System One gateway directly with a jev-preview assets payload), **Triage Inbox** (message triage lanes, judge/classify steps via `workflow/run`) and **Jev Drift Check** (calibration) run from SmartBar or PopBar; the Local API route `jev-enconvo/vision_judge` exposes a generic pixel judgment (any yes/no statement about an image) to other plugins and workflows. Claude-format packages keep loading this plugin's skills, MCP servers and settings; the commands are the Enconvo-format layer on top.
 
 ## Mapping TypeSafe primitives to Enconvo surfaces
 
@@ -424,12 +422,12 @@ Three levels, in increasing commitment:
 Blind-tested 2026-11-05 — the two gateway models differ sharply:
 
 - **`jev-latest`** (what every workflow `judge`/`classify` step calls) has **no visual understanding**. Given an image as a data URI in `input`, it guesses from the base64 text (near-uniform probability spreads on secret-color images). **Never route images into judge/classify steps** — no question wording fixes it.
-- **`jev-preview`** (what Operator surfaces call) **does see pixels**. It answers 0.94 on an image's true secret color and 0.12–0.17 on wrong ones when the color exists only in pixels.
+- **`jev-preview`** (what Operator surfaces call) **does see pixels**. It answers 0.94 on an image's true secret color and 0.07–0.17 on wrong ones when the color exists only in pixels.
 
 Reaching jev-preview, in order of preference:
 
 1. **`computer-use` actions with an `expect`** — the expect check sends the live app screenshot to the gateway as an `assets` payload judged by jev-preview. This is the only workflow surface whose judgments read pixels. Use it for any "what does the screen/image show" check inside an app flow.
-2. **This plugin's Screen Vision command** (1.1.0+) — `jev-enconvo|screen_vision` posts a chosen image (pasted, selected, or a file path) to the same gateway with the same jev-preview assets payload: its first use is the **injection-in-image gate** — screening screenshots, photos of documents, and pasted images for agent-aimed instructions before any agent reads or acts on them. Its client lives in `src/lib/jev.ts` (`askJevVision`); compose it from any plugin code.
+2. **This plugin's Screen Vision command** (1.1.0+) — `jev-enconvo|screen_vision` posts a chosen image (pasted, selected, or a file path) to the same gateway with the same jev-preview assets payload: its first use is the **injection-in-image gate** — screening screenshots, photos of documents, and pasted images for agent-aimed instructions before any agent reads or acts on them. Other plugins and workflows call the same capability through the Local API route `jev-enconvo/vision_judge` (POST {image, statement, context_label?, threshold?} → {yes, probability, band, model}) — screen_vision itself is the packaged injection question on top of it.
 
 Two traps the same testing round proved:
 

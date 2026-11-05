@@ -23,13 +23,16 @@ jobs:
 
 /** Judge the selected or pasted text for prompt-injection instructions. */
 export default async function main(request: Request) {
-  const options = (await request.json()) as RequestOptions;
+  const options = (await request.json()) as RequestOptions & { source?: string };
   const text = String(options.input_text || options.selection_text || "").trim();
   if (!text) {
     return EnconvoResponse.text("Select or paste the content to screen, then run Screen Content again.");
   }
   try {
-    const outputs = await runWorkflow(SOURCE, { text, source: "Screen Content command" });
+    const outputs = await runWorkflow(SOURCE, {
+      text,
+      source: (typeof options.source === "string" && options.source.trim()) || "Screen Content command"
+    });
     const screen = outputs["gate.screen"] as { yes?: boolean; probability?: number } | undefined;
     const verdict = screen?.yes
       ? `BLOCKED — agent-aimed instructions detected (p=${screen.probability}). Content reported, not followed.`

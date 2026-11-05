@@ -74,9 +74,12 @@ jobs:
 
 /** Re-run the Auto Route probes and report calibration drift. */
 export default async function main(request: Request) {
-  void request;
+  const options = (await request.json()) as RequestOptions & { tolerance?: number; probes?: unknown };
   try {
-    const outputs = await runWorkflow(SOURCE, {});
+    const inputs: Record<string, unknown> = {};
+    if (typeof options.tolerance === "number" && options.tolerance >= 0 && options.tolerance <= 1) inputs.tolerance = options.tolerance;
+    if (Array.isArray(options.probes) && options.probes.length > 0) inputs.probes = options.probes;
+    const outputs = await runWorkflow(SOURCE, inputs);
     const verdict = outputString(outputs, "drift.compare.stdout") || outputString(outputs, "drift.compare");
     return EnconvoResponse.text(verdict);
   } catch (error) {

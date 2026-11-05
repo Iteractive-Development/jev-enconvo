@@ -52,15 +52,33 @@ jobs:
         required: false
       - id: summary
         uses: transform
-        value: "Mail triaged: {{ steps.mail_lanes.output | length }}. Messages triaged: {{ steps.message_lanes.output | length }}. Lanes: {{ steps.mail_lanes.output | dump }} | {{ steps.message_lanes.output | dump }}"
+        value: "Mail triaged: {{ steps.mail_lanes.output | length }}. Messages triaged: {{ steps.message_lanes.output | length }}."
+      - id: lanes
+        uses: transform
+        value: "{{ [steps.mail_lanes.output, steps.message_lanes.output] | dump }}"
 `;
 
 /** Triage recent Mail and unread iMessages into lanes. */
 export default async function main(request: Request) {
-  void request;
+  const options = (await request.json()) as RequestOptions & { mail_limit?: number; messages_limit?: number };
   try {
-    const outputs = await runWorkflow(SOURCE, {});
-    const summary = outputString(outputs, "triage.summary");
+    const inputs: Record<string, unknown> = {};
+    if (typeof options.mail_limit === "number" && options.mail_limit > 0) inputs.mail_limit = options.mail_limit;
+    if (typeof options.messages_limit === "number" && options.messages_limit > 0) inputs.messages_limit = options.messages_limit;
+    const outputs = await runWorkflow(SOURCE, inputs);
+    const lanes = outputs["triage.lanes"] as unknown | undefined;
+    let summary = outputString(outputs, "triage.summary");
+    if (Array.isArray(lanes) && lanes.length === 2 && Array.isArray(lanes[0])) {
+      const [mailLanes, msgLanes] = lanes as Array<Array<{ label?: string }>>;
+      const count = (arr: Array<{ label?: string }>) =>
+        arr.reduce<Record<string, number>>((m, x) => ({ ...m, [String(x.label ?? "?")]: (m[String(x.label ?? "?")] ?? 0) + 1 }), {});
+      const fmt = (m: Record<string, number>) => Object.entries(m).map(([k, v]) => `${k}: ${v}`).join(", ") || "none";
+      summary = [
+        outputString(outputs, "triage.summary"),
+        `Email lanes — ${fmt(count(mailLanes))}`,
+        `Message lanes — ${fmt(count(msgLanes))}`
+      ].join("\n");
+    }
     return EnconvoResponse.text(summary);
   } catch (error) {
     return EnconvoResponse.text(`Triage Inbox failed: ${(error as Error).message}`);

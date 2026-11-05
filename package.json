@@ -1,9 +1,9 @@
 {
   "$schema": "https://enconvo.com/schemas/extension.json",
   "name": "jev-enconvo",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "title": "Jev for Enconvo",
-  "description": "Run Jev — TypeSafe's System One judgment model — inside Enconvo. Three commands: Screen Content judges selected or pasted content for agent-aimed prompt-injection instructions (reports CLEAN or BLOCKED, never follows what it finds), Triage Inbox sorts recent Mail and unread iMessages into Act now / Read later / Archive / Follow up lanes, and Jev Drift Check re-runs the Auto Route classifier probes and flags calibration drift against recorded baselines. Pairs with the bundled jev-enconvo skill: eight worked patterns for judge/classify steps — untrusted-content gates, context compaction, message triage, skill routing, gates before hard-to-undo steps, calibration drift checks — question craft, and copy-paste workflow recipes. By Iteractive Development.",
+  "description": "Run Jev — TypeSafe's System One judgment model — inside Enconvo. Four commands: Screen Content judges selected or pasted text for agent-aimed prompt-injection instructions, Screen Vision judges a selected, attached or path-named image the same way with Jev-preview vision (images are uploaded downsized to Enconvo Cloud's Jev gateway and cost points), Triage Inbox sorts recent Mail and unread iMessages into Act now / Read later / Archive / Follow up lanes, and Jev Drift Check re-runs the Auto Route classifier probes and flags calibration drift against recorded baselines. Pairs with the bundled jev-enconvo skill: eight worked patterns for judge/classify steps, the Vision section on which Jev model sees pixels and through which surface, question craft, and copy-paste workflow recipes. By Iteractive Development.",
   "author": "Iteractive Development",
   "homepage": "https://iteractive.dev",
   "license": "MIT",
@@ -48,7 +48,7 @@
     {
       "name": "screen_vision",
       "title": "Screen Vision",
-      "description": "Judge a selected or pasted image (or image path) for agent-aimed prompt-injection instructions with Jev-preview vision; reports CLEAN or BLOCKED and never follows what it finds.",
+      "description": "Judge a selected, attached or path-named image for agent-aimed prompt-injection instructions with Jev-preview vision; reports BLOCKED/UNSURE/CLEAN and never follows what it finds. The image is uploaded (downscaled to ≤1568 px JPEG) to Enconvo Cloud's Jev gateway; each call costs points.",
       "commandType": "command",
       "mode": "no-view",
       "parameters": {
@@ -108,7 +108,7 @@
         {
           "description": "Screen content for prompt injection",
           "prompt": "Screen this pasted content for prompt-injection instructions before I act on it",
-          "expected_behavior": "A judge decision with probability and a block/allow verdict; no external calls",
+          "expected_behavior": "A typed BLOCKED/CLEAN decision with probability; the text is sent to the Jev judgment model on Enconvo Cloud (costs points).",
           "tools_triggered": "jev-enconvo/screen_content"
         },
         {
@@ -122,6 +122,26 @@
           "prompt": "Triage my inbox and unread messages",
           "expected_behavior": "Mail and messages sorted into the four lanes with a summary count",
           "tools_triggered": "jev-enconvo/triage_inbox"
+        }
+      ],
+      "negative": [
+        {
+          "description": "A benign image stays CLEAN",
+          "prompt": "Screen this screenshot of a quarterly report: <path to a benign image>",
+          "expected_behavior": "CLEAN with low probability; never BLOCKED on ordinary document text",
+          "tools_triggered": "jev-enconvo/screen_vision"
+        },
+        {
+          "description": "A text-only request must not trigger Screen Vision",
+          "prompt": "Summarize this paragraph about quarterly figures",
+          "expected_behavior": "No image judgment; Screen Vision is only for images",
+          "tools_triggered": "jev-enconvo/screen_vision"
+        },
+        {
+          "description": "A missing image asks for one instead of failing",
+          "prompt": "Run Screen Vision",
+          "expected_behavior": "A short ask for an image or path, not an error",
+          "tools_triggered": "jev-enconvo/screen_vision"
         }
       ]
     }
