@@ -22,7 +22,16 @@
     "name": "screen_vision",
     "title": "Screen Vision",
     "description": "Judge a selected or pasted image (or image path) for agent-aimed prompt-injection instructions with Jev-preview vision; reports CLEAN or BLOCKED and never follows what it finds.",
-    "routePath": "jev-enconvo/screen_vision"
+    "routePath": "jev-enconvo/screen_vision",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "input_text": {
+          "type": "string",
+          "description": "Image data URI or file path (.png/.jpg/…) to screen; defaults to the current selection or pasted image"
+        }
+      }
+    }
   },
   {
     "name": "triage_inbox",
